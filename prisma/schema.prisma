@@ -1,0 +1,131 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Cake {
+  id            Int           @id @default(autoincrement())
+  cake_name     String
+  cake_price    Float
+  cake_image    String
+  best_before   DateTime
+  cake_flavour  String
+  compositions  Composition[]
+  detail_orders DetailOrder[]
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+}
+
+model Material {
+  id              Int            @id @default(autoincrement())
+  material_name   String
+  material_price  Float
+  material_type   String
+  compositions    Composition[]
+  detail_supplies DetailSupply[]
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+}
+
+model Composition {
+  id          Int      @id @default(autoincrement())
+  cake_id     Int
+  material_id Int
+  quantity    Float
+  cake        Cake     @relation(fields: [cake_id], references: [id])
+  material    Material @relation(fields: [material_id], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Supplier {
+  id                Int       @id @default(autoincrement())
+  supplier_name     String
+  supplier_address  String
+  supplier_phone    String
+  supplies          Supply[]
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+}
+
+model Supply {
+  id              Int             @id @default(autoincrement())
+  supply_date     DateTime
+  supplier_id     Int
+  user_id         Int
+  supplier        Supplier        @relation(fields: [supplier_id], references: [id])
+  user            User            @relation(fields: [user_id], references: [id])
+  detail_supplies DetailSupply[]
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+}
+
+model DetailSupply {
+  id              Int       @id @default(autoincrement())
+  supply_id       Int
+  material_id     Int
+  material_price  Float
+  quantity        Float
+  supply          Supply    @relation(fields: [supply_id], references: [id])
+  material        Material  @relation(fields: [material_id], references: [id])
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
+
+model Order {
+  id            Int           @id @default(autoincrement())
+  order_date    DateTime
+  user_id       Int
+  status        String
+  user          User          @relation(fields: [user_id], references: [id])
+  detail_orders DetailOrder[]
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+}
+
+model DetailOrder {
+  id         Int    @id @default(autoincrement())
+  order_id   Int
+  cake_id    Int
+  cake_price Float
+  quantity   Float
+  order      Order  @relation(fields: [order_id], references: [id])
+  cake       Cake   @relation(fields: [cake_id], references: [id])
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model User {
+  id            Int       @id @default(autoincrement())
+  user_name     String
+  user_email    String    @unique
+  user_password String
+  user_role     String
+  supplies      Supply[]
+  orders        Order[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+enum MaterialType{
+  SOLID
+  POWDER
+  LIQUID
+}
+
+enum UserRole{
+  ADMIN
+  CASHIER
+}
+
+enum OrderStatus{
+  PROCESS
+  DELIVERED
+}
