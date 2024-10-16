@@ -1,13 +1,14 @@
 import { Request, Response } from "express";
 import { PrismaClient } from "@prisma/client";
-import { Cake } from "@prisma/client";
+import {error, log} from "console";
+import { date } from "joi";
 import fs from "fs";
 import { ROOT_DIRECTORY } from "../config";
 
 const prisma = new PrismaClient({ errorFormat: "minimal" });
 
 // membuat data cake
-const createCake = async (req: Request, res: Response) => {
+const createCake = async (req: Request, res: Response): Promise<any> => {
     try {
         const cake_name = req.body.cake_name;
         const cake_price = req.body.cake_price;
@@ -15,7 +16,8 @@ const createCake = async (req: Request, res: Response) => {
         const best_before = req.body.best_before;
         const cake_flavour = req.body.cake_flavor;
         const compositions = req.body.composition;
-
+        
+        // menyimpan data cake ke database
         const newCake = await prisma.cake.create({
             data: {
                 cake_name,
@@ -33,13 +35,12 @@ const createCake = async (req: Request, res: Response) => {
         });
     } catch (error) {
         console.log(error);
-
         return res.status(500).json({ error: error });
     }
 };
 
 // membaca data cake
-const readCake = async (req: Request, res: Response) => {
+const readCake = async (req: Request, res: Response): Promise<any> => {
     try {
         const search = req.query.search;
         const allCake = await prisma.cake.findMany({
@@ -59,7 +60,7 @@ const readCake = async (req: Request, res: Response) => {
 };
 
 // mengupdate data cake
-const updateCake = async (req: Request, res: Response) => {
+const updateCake = async (req: Request, res: Response): Promise<any> => {
     try {
         // membaca id cake
         const cake_id = req.params.cake_id;
@@ -90,7 +91,6 @@ const updateCake = async (req: Request, res: Response) => {
         const {
             cake_name,
             cake_price,
-            cake_image,
             best_before,
             cake_flavour,
             compositions,
@@ -105,7 +105,6 @@ const updateCake = async (req: Request, res: Response) => {
                 cake_image: req.file ? req.file.filename : findCake.cake_image,
                 best_before: best_before ? new Date(best_before) : findCake.best_before,
                 cake_flavour: cake_flavour ?? findCake.cake_flavour,
-                // error
                 // compositions: compositions ?? findCake.compositions,
             },
         });
@@ -120,7 +119,7 @@ const updateCake = async (req: Request, res: Response) => {
 };
 
 // menghapus data cake
-const deleteCake = async (req: Request, res: Response) => {
+const deleteCake = async (req: Request, res: Response): Promise<any> => {
     try {
         const id = req.params.id;
 

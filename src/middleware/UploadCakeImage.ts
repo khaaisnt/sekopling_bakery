@@ -28,5 +28,21 @@ const fileFilter = (
     file: Express.Multer.File,
     callback: multer.FileFilterCallback
 ) => {
-    
+    // extensi file yang diizinkan
+    const allowedFile = /png|jpg|jpeg|gif/;
+    // cek extensi file yang diupload
+    const isAllow = allowedFile.test(file.mimetype);
+    if (isAllow){
+        callback(null, true);
+    }else{
+      callback(new Error("File type not allowed"));
+    }
 }
+
+const uploadCakeImage = multer({
+  storage: storage,
+  fileFilter: fileFilter,
+  limits: {fileSize: 2 * 1024 * 1024} // 2MB
+})
+
+export { uploadCakeImage };
