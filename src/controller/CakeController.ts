@@ -1,7 +1,5 @@
 import { Request, Response } from "express";
 import { PrismaClient } from "@prisma/client";
-import {error, log} from "console";
-import { date } from "joi";
 import fs from "fs";
 import { ROOT_DIRECTORY } from "../config";
 
@@ -63,11 +61,11 @@ const readCake = async (req: Request, res: Response): Promise<any> => {
 const updateCake = async (req: Request, res: Response): Promise<any> => {
     try {
         // membaca id cake
-        const cake_id = req.params.cake_id;
+        const id = req.params.id;
 
         // cek ketersediaan cake berdasarkan id
         const findCake = await prisma.cake.findFirst({
-            where: { id: Number(cake_id) },
+            where: { id: Number(id) },
         });
 
         // jika cake tidak ditemukan
@@ -98,7 +96,7 @@ const updateCake = async (req: Request, res: Response): Promise<any> => {
 
         // mengupdate data cake
         const saveCake = await prisma.cake.update({
-            where: { id: Number(cake_id) },
+            where: { id: Number(id) },
             data: {
                 cake_name: cake_name ?? findCake.cake_name,
                 cake_price: cake_price ? Number(cake_price) : findCake.cake_price,
@@ -147,6 +145,12 @@ const deleteCake = async (req: Request, res: Response): Promise<any> => {
         const deleteCake = await prisma.cake.delete({
             where: { id: Number(id) },
         });
+
+        return res.status(200).json({
+            message: "Cake deleted successfully",
+            data: deleteCake,
+        });
+
     } catch (error) {
         return res.status(500).json(error);
     }
