@@ -3,7 +3,7 @@ import { PrismaClient } from "@prisma/client";
 import fs from "fs";
 import { ROOT_DIRECTORY } from "../config";
 
-const prisma = new PrismaClient({ errorFormat: "minimal" });
+const prisma = new PrismaClient();
 
 // membuat data cake
 const createCake = async (req: Request, res: Response): Promise<any> => {
