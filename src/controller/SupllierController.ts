@@ -1,14 +1,12 @@
 import { Request, Response } from "express";
 import { PrismaClient } from "@prisma/client";
-import bcrypt from "bcrypt"
-import jwt from "jsonwebtoken"
 const prisma = new PrismaClient()
 
 const createSupllier = async (req: Request, res: Response): Promise<void> => {
     try {
-        const supplier_name = req.body.supplier_name;
-        const supplier_address = req.body.supplier_address;
-        const supplier_phone = req.body.supplier_phone;
+        const supplier_name: string = req.body.supplier_name;
+        const supplier_address: string = req.body.supplier_address;
+        const supplier_phone: number = Number (req.body.supplier_phone);
 
         const newSupplier = await prisma.supplier.create({
             data: {

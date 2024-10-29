@@ -27,7 +27,7 @@ model Material {
   id              Int            @id @default(autoincrement())
   material_name   String
   material_price  Float
-  material_type   String
+  material_type   MaterialType
   compositions    Composition[]
   detail_supplies DetailSupply[]
   createdAt       DateTime       @default(now())
@@ -49,7 +49,7 @@ model Supplier {
   id                Int       @id @default(autoincrement())
   supplier_name     String
   supplier_address  String
-  supplier_phone    String
+  supplier_phone    Int
   supplies          Supply[]
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
@@ -83,7 +83,7 @@ model Order {
   id            Int           @id @default(autoincrement())
   order_date    DateTime
   user_id       Int
-  status        String
+  status        OrderStatus
   user          User          @relation(fields: [user_id], references: [id])
   detail_orders DetailOrder[]
   createdAt     DateTime      @default(now())
@@ -107,25 +107,25 @@ model User {
   user_name     String
   user_email    String    @unique
   user_password String
-  user_role     String
+  user_role     UserRole
   supplies      Supply[]
   orders        Order[]
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 }
 
-enum MaterialType{
+enum MaterialType {
   SOLID
   POWDER
   LIQUID
 }
 
-enum UserRole{
+enum UserRole {
   ADMIN
-  CASHIER
+  USER
 }
 
-enum OrderStatus{
+enum OrderStatus {
   PROCESS
   DELIVERED
 }

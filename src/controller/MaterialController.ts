@@ -6,8 +6,8 @@ const prisma = new PrismaClient({ errorFormat: "minimal" });
 // membuat data material
 const createMaterial = async (req: Request, res: Response): Promise<any> => {
     try {
-        const material_name = req.body.material_name;
-        const material_price = req.body.material_price;
+        const material_name: string = req.body.material_name;
+        const material_price: number = req.body.material_price;
         const material_type = req.body.material_type;
         const compositions = req.body.compositions;
         const detail_supplies = req.body.detail_supplies;

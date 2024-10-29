@@ -8,11 +8,11 @@ const prisma = new PrismaClient();
 // membuat data cake
 const createCake = async (req: Request, res: Response): Promise<any> => {
     try {
-        const cake_name = req.body.cake_name;
-        const cake_price = req.body.cake_price;
-        const cake_image = req.body.cake_image;
-        const best_before = req.body.best_before;
-        const cake_flavour = req.body.cake_flavor;
+        const cake_name: string = req.body.cake_name;
+        const cake_price: number = Number(req.body.cake_price);
+        const cake_image: string = req.file?.filename || "";
+        const best_before: Date = new Date(req.body.best_before);
+        const cake_flavour: string = req.body.cake_flavor;
         const compositions = req.body.composition;
         
         // menyimpan data cake ke database
