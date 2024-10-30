@@ -1,123 +1,144 @@
 import { Request, Response } from "express";
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, UserRole } from "@prisma/client";
+import bcrypt from "bcrypt"; // for hashing password
 
 const prisma = new PrismaClient();
 
 // membuat data user
 const createUser = async (req: Request, res: Response): Promise<any> => {
     try {
-        const user_name = req.body.user_name;
-        const user_email = req.body.user_email;
-        const user_password = req.body.user_password;
-        const user_role = req.body.user_role;
-        
+        const { user_name, user_email, user_password, user_role } = req.body;
+
+        // Validasi role berdasarkan enum
+        if (!Object.values(UserRole).includes(user_role)) {
+            return res.status(400).json({ message: "Invalid user role" });
+        }
+
+        // Hash password
+        const hashedPassword = await bcrypt.hash(user_password, 10);
+
+        // Membuat user baru
         const newUser = await prisma.user.create({
             data: {
                 user_name,
                 user_email,
-                user_password,
+                user_password: hashedPassword, // Save hashed password
                 user_role,
             },
-        })
+        });
 
-        return res.status(200).json({
+        return res.status(201).json({
             message: "User created successfully",
             data: newUser,
         });
-
     } catch (error) {
-        console.log(error);
-        return res.status(500).json({ error: error });
+        console.error(error);
+        return res.status(500).json({ error: "Internal Server Error" });
     }
-}
+};
 
 // membaca data user
 const readUser = async (req: Request, res: Response): Promise<any> => {
     try {
-        const search = req.query.search;
-        const allUser = await prisma.user.findMany({
-            where: {
-                OR: [{ user_name: { contains: search?.toString() || "" } }],
-            },
-        });
-        return res.status(200).json({
-            message: "User found",
-            data: allUser,
-        });
-    } catch (error) {
-        console.log(error);
-
-        return res.status(500).json({ error });
-    }
-};
-
-// mengupdate data user
-const updateUser = async (req: Request, res: Response):Promise<any> => {
-    try {
         const id = req.params.id;
-        
-        const findUser = await prisma.user.findFirst({
+
+        // Cari user berdasarkan id
+        const user = await prisma.user.findUnique({
             where: { id: Number(id) },
         });
 
-        // jika user tidak ditemukan
-        if (!findUser) {
-            return res.status(200).json({
+        // Jika user tidak ditemukan
+        if (!user) {
+            return res.status(404).json({
                 message: "User not found",
             });
         }
 
-        const {
-            user_name,
-            user_email,
-            user_password,
-            user_role,
-        } = req.body;
+        return res.status(200).json({
+            message: "User found",
+            data: user,
+        });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ error: "Internal Server Error" });
+    }
+};
 
-        const saveCake = await prisma.user.update({
-            where: {id: Number(id)},
-            data:{
+// mengupdate data user
+const updateUser = async (req: Request, res: Response): Promise<any> => {
+    try {
+        const id = req.params.id;
+
+        // Cari user berdasarkan id
+        const findUser = await prisma.user.findUnique({
+            where: { id: Number(id) },
+        });
+
+        // Jika user tidak ditemukan
+        if (!findUser) {
+            return res.status(404).json({
+                message: "User not found",
+            });
+        }
+
+        const { user_name, user_email, user_password, user_role } = req.body;
+
+        // Hash password jika ada pembaruan
+        let hashedPassword;
+        if (user_password) {
+            hashedPassword = await bcrypt.hash(user_password, 10);
+        }
+
+        // Perbarui user
+        const updatedUser = await prisma.user.update({
+            where: { id: Number(id) },
+            data: {
                 user_name: user_name ?? findUser.user_name,
                 user_email: user_email ?? findUser.user_email,
-                user_password: user_password ?? findUser.user_password,
+                user_password: user_password ? hashedPassword : findUser.user_password,
                 user_role: user_role ?? findUser.user_role,
-            }
-        })
+            },
+        });
 
         return res.status(200).json({
             message: "User updated successfully",
-            data: saveCake,
+            data: updatedUser,
         });
     } catch (error) {
-        return res.status(500).json(error);
+        console.error(error);
+        return res.status(500).json({ error: "Internal Server Error" });
     }
-}
+};
 
 // menghapus data user
 const deleteUser = async (req: Request, res: Response): Promise<any> => {
     try {
         const id = req.params.id;
-        const findUser = await prisma.user.findFirst({
+
+        // Cari user berdasarkan id
+        const findUser = await prisma.user.findUnique({
             where: { id: Number(id) },
         });
 
-        // jika user tidak ditemukan
+        // Jika user tidak ditemukan
         if (!findUser) {
-            return res.status(200).json({
+            return res.status(404).json({
                 message: "User not found",
             });
         }
 
-        const deleteUser = await prisma.user.delete({
+        // Hapus user
+        const deletedUser = await prisma.user.delete({
             where: { id: Number(id) },
-        })
+        });
 
         return res.status(200).json({
             message: "User deleted successfully",
-            data: deleteUser,
+            data: deletedUser,
         });
     } catch (error) {
-        return res.status(500).json(error );
+        console.error(error);
+        return res.status(500).json({ error: "Internal Server Error" });
     }
 };
 

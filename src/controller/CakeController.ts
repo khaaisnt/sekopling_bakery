@@ -12,10 +12,14 @@ const createCake = async (req: Request, res: Response): Promise<any> => {
         const cake_price: number = Number(req.body.cake_price);
         const cake_image: string = req.file?.filename || "";
         const best_before: Date = new Date(req.body.best_before);
-        const cake_flavour: string = req.body.cake_flavor;
-        const compositions = req.body.composition;
-        
-        // menyimpan data cake ke database
+        const cake_flavour: string = req.body.cake_flavour;
+        const compositions = req.body.compositions;
+
+        const compositionData = compositions.map((comp: any) => ({
+            material_id: Number(comp.material_id),
+            quantity: Number(comp.quantity),
+        }));
+
         const newCake = await prisma.cake.create({
             data: {
                 cake_name,
@@ -23,8 +27,11 @@ const createCake = async (req: Request, res: Response): Promise<any> => {
                 cake_image,
                 best_before,
                 cake_flavour,
-                compositions,
+                compositions: {
+                    create: compositionData, // Create compositions
+                },
             },
+            include: { compositions: true }, // Include compositions in the response
         });
 
         return res.status(200).json({
@@ -36,6 +43,7 @@ const createCake = async (req: Request, res: Response): Promise<any> => {
         return res.status(500).json({ error: error });
     }
 };
+
 
 // membaca data cake
 const readCake = async (req: Request, res: Response): Promise<any> => {
