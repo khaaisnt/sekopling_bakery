@@ -1,28 +1,32 @@
 import { Request, Response } from "express";
 import { PrismaClient, UserRole } from "@prisma/client";
-import bcrypt from "bcrypt"; // for hashing password
+import bcrypt from "bcrypt";
 
 const prisma = new PrismaClient();
 
 // membuat data user
 const createUser = async (req: Request, res: Response): Promise<any> => {
     try {
-        const { user_name, user_email, user_password, user_role } = req.body;
+        const { 
+            user_name, 
+            user_email, 
+            user_password, 
+            user_role 
+        } = req.body;
 
-        // Validasi role berdasarkan enum
+        // validasi role berdasarkan enum
         if (!Object.values(UserRole).includes(user_role)) {
             return res.status(400).json({ message: "Invalid user role" });
         }
 
-        // Hash password
+        // hash password
         const hashedPassword = await bcrypt.hash(user_password, 10);
 
-        // Membuat user baru
         const newUser = await prisma.user.create({
             data: {
                 user_name,
                 user_email,
-                user_password: hashedPassword, // Save hashed password
+                user_password: hashedPassword,
                 user_role,
             },
         });
@@ -60,7 +64,7 @@ const readUser = async (req: Request, res: Response): Promise<any> => {
         });
     } catch (error) {
         console.error(error);
-        return res.status(500).json({ error: "Internal Server Error" });
+        return res.status(500).json({ error});
     }
 };
 
@@ -83,7 +87,6 @@ const updateUser = async (req: Request, res: Response): Promise<any> => {
 
         const { user_name, user_email, user_password, user_role } = req.body;
 
-        // Hash password jika ada pembaruan
         let hashedPassword;
         if (user_password) {
             hashedPassword = await bcrypt.hash(user_password, 10);
@@ -106,7 +109,7 @@ const updateUser = async (req: Request, res: Response): Promise<any> => {
         });
     } catch (error) {
         console.error(error);
-        return res.status(500).json({ error: "Internal Server Error" });
+        return res.status(500).json({ error });
     }
 };
 
@@ -138,7 +141,7 @@ const deleteUser = async (req: Request, res: Response): Promise<any> => {
         });
     } catch (error) {
         console.error(error);
-        return res.status(500).json({ error: "Internal Server Error" });
+        return res.status(500).json({ error });
     }
 };
 

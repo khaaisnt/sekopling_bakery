@@ -6,7 +6,12 @@ const prisma = new PrismaClient();
 // Create Supply
 const createSupply = async (req: Request, res: Response): Promise<void> => {
     try {
-        const { supply_date, supplier_id, user_id, detail_supplies } = req.body;
+        const { 
+            supply_date,
+            supplier_id, 
+            user_id, 
+            detail_supplies 
+        } = req.body;
 
         const newSupply = await prisma.supply.create({
             data: {
@@ -15,6 +20,7 @@ const createSupply = async (req: Request, res: Response): Promise<void> => {
                 user_id: Number(user_id),
                 detail_supplies: {
                     create: detail_supplies.map((detail: any) => ({
+                        supplier_id: detail.supplier_id,
                         material_id: detail.material_id,
                         material_price: detail.material_price,
                         quantity: detail.quantity

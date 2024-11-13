@@ -28,18 +28,25 @@ const createSupllier = async (req: Request, res: Response): Promise<void> => {
 
 const readSupllier = async (req: Request, res: Response): Promise<any> => {
     try {
-        const search = req.query.search
-        const allSupplier = await prisma.supplier.findMany({
-            where: {
-                OR: [{ supplier_name: { contains: search?.toString() || "" } }],
-            }
-        })
+        const id = req.params.id;
+
+        const supplier = await prisma.supplier.findUnique({
+            where: { id: Number(id) }
+        });
+
+        if (!supplier) {
+            return res.status(404).json({
+                message: "Supplier not found"
+            });
+        }
+
         return res.status(200).json({
             message: "Supplier found",
-            data: allSupplier
-        })
+            data: supplier
+        });
     } catch (error) {
-        return res.status(500).json(error)
+        console.log(error);
+        return res.status(500).json({ error });
     }
 }
 

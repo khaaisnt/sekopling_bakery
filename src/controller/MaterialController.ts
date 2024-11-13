@@ -1,25 +1,25 @@
 import { Request, Response } from "express";
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, MaterialType } from "@prisma/client";
 
-const prisma = new PrismaClient({ errorFormat: "minimal" });
+const prisma = new PrismaClient();
 
 // membuat data material
 const createMaterial = async (req: Request, res: Response): Promise<any> => {
     try {
-        const material_name: string = req.body.material_name;
-        const material_price: number = req.body.material_price;
-        const material_type = req.body.material_type;
-        const compositions = req.body.compositions;
-        const detail_supplies = req.body.detail_supplies;
+        const material_name : string = req.body.material_name;
+        const material_price : number = req.body.material_price;
+        const material_type : 'SOLID' | 'LIQUID' | 'POWDER' = req.body.material_type;
 
-        // menyimpan data material ke database
+        if (!Object.values(MaterialType).includes(material_type)) {
+            return res.status(400).json({ message: "Invalid material type" });
+        }
+
+        // Menyimpan data material ke database
         const newMaterial = await prisma.material.create({
             data: {
                 material_name,
                 material_price,
-                material_type,
-                compositions,
-                detail_supplies,
+                material_type
             },
         });
 
@@ -27,105 +27,100 @@ const createMaterial = async (req: Request, res: Response): Promise<any> => {
             message: "Material created successfully",
             data: newMaterial,
         });
-
     } catch (error) {
-        console.log(error)
-        return res.status(500).json({ error: error });
-    }
-}
-
-// membaca data material
-const readMaterial = async (req: Request, res: Response): Promise<any> => {
-    try {
-        const search = req.query.search;
-        const allMaterial = await prisma.material.findMany({
-            where: {
-                OR: [{ material_name: { contains: search?.toString() || "" } }],
-            },
-        });
-        return res.status(200).json({
-            message: "Material found",
-            data: allMaterial,
-        });
-    } catch (error) {
-        console.log(error);
-
+        console.error(error);
         return res.status(500).json({ error });
     }
 };
 
-// mengupdate data material
-const updateMaterial = async (req: Request, res: Response):Promise<any> => {
+// membaca data material
+const readMaterial = async (req: Request, res: Response): Promise<any> => {
     try {
-        const material_id = req.params.material_id;
+        const search = req.query.search?.toString() || "";
 
-        const findMaterial = await prisma.material.findFirst({
-            where: {id: Number(material_id)}
-        })
+        // Membaca data dari database
+        const allMaterial = await prisma.material.findMany({
+            where: {
+                material_name: { contains: search },
+            },
+            include: {
+                compositions: true,
+                detail_supplies: true,
+            },
+        });
+
+        return res.status(200).json({
+            message: "Materials found",
+            data: allMaterial,
+        });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ error});
+    }
+};
+
+// mengupdate data material
+const updateMaterial = async (req: Request, res: Response): Promise<any> => {
+    try {
+        const id = req.params.id
+        
+        // Mencari material berdasarkan id
+        const findMaterial = await prisma.material.findUnique({
+            where: {id: Number(id)},
+        });
 
         if (!findMaterial) {
-            return res.status(404).json({
-                message: "Material not found"
-            })
+            return res.status(404).json({ message: "Material not found" });
         }
 
-        const{
-            material_name,
-            material_price,
-            material_type,
-            compositions,
-            detail_supplies
-        } = req.body;
+        const { material_name, material_price, material_type } = req.body;
 
-        // update data material
-        const saveMaterial = await prisma.material.update({
-            where: {id: Number(material_id)},
+        // Update data material
+        const updatedMaterial = await prisma.material.update({
+            where: { id: Number(id) },
             data: {
                 material_name: material_name ?? findMaterial.material_name,
                 material_price: material_price ?? findMaterial.material_price,
                 material_type: material_type ?? findMaterial.material_type,
-                // compositions: compositions ?? findMaterial.compositions,
-                // detail_supplies: detail_supplies ?? findMaterial.detail_supplies
-            }
-        })
+            },
+        });
 
         return res.status(200).json({
             message: "Material updated successfully",
-            data: saveMaterial
-        })
-
+            data: updatedMaterial,
+        });
     } catch (error) {
-        return res.status(500).json(error);
+        console.error(error);
+        return res.status(500).json({ error});
     }
-}
+};
 
-// hapus data material
+// menghapus data material
 const deleteMaterial = async (req: Request, res: Response): Promise<any> => {
     try {
-        const material_id = req.params.material_id;
+        const id = req.params.id
 
-        const findMaterial = await prisma.material.findFirst({
-            where: {id: Number(material_id)}
-        })
+        // Mencari material berdasarkan id
+        const findMaterial = await prisma.material.findUnique({
+            where: { id: Number(id) },
+        });
 
         if (!findMaterial) {
-            return res.status(200).json({
-                message: "Material not found"
-            })
+            return res.status(404).json({ message: "Material not found" });
         }
 
-        // hapus data
+        // Menghapus data material
         await prisma.material.delete({
-            where: {id: Number(material_id)}
-        })
+            where: { id: Number(id) },
+        });
 
         return res.status(200).json({
-            message: "Material deleted successfully"
-        })
-
+            message: "Material deleted successfully",
+        });
     } catch (error) {
-        return res.status(500).json(error);
+        console.error(error);
+        return res.status(500).json({ error});
     }
-}
+};
 
 export { createMaterial, readMaterial, updateMaterial, deleteMaterial };
