@@ -57,9 +57,10 @@ model Supplier {
 
 model Supply {
   id              Int             @id @default(autoincrement())
-  supply_date     DateTime
+  supply_date     DateTime        @default(now())
   supplier_id     Int
   user_id         Int
+  material_id     Int
   supplier        Supplier        @relation(fields: [supplier_id], references: [id])
   user            User            @relation(fields: [user_id], references: [id])
   detail_supplies DetailSupply[]

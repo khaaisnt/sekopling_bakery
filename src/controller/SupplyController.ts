@@ -1,35 +1,46 @@
 import { Request, Response } from "express";
 import { PrismaClient } from "@prisma/client";
 
-const prisma = new PrismaClient();
+const prisma = new PrismaClient({
+    errorFormat: "minimal"
+})
 
 // Create Supply
-const createSupply = async (req: Request, res: Response): Promise<void> => {
+const createSupply = async (req: Request, res: Response): Promise<any> => {
     try {
-        const { 
-            supply_date,
-            supplier_id, 
-            user_id, 
-            detail_supplies 
-        } = req.body;
+        const supply_date : Date = new Date (req.body.supply_date)
+        const supplier_id : number = (req.body.supplier_id)
+        const user_id : number = (req.body.user_id)
+        const material_id : number = (req.body.material_id)
+        const detail_supplies : any[] = req.body.detail_supplies || []
+
+        const userExist = await prisma.user.findUnique({
+            where: { id: Number(user_id) }
+        });
+
+        if (!userExist) {
+            return res.status(404).json({ message: "User not found" });
+        }
 
         const newSupply = await prisma.supply.create({
             data: {
-                supply_date: new Date(supply_date),
-                supplier_id: Number(supplier_id),
-                user_id: Number(user_id),
-                detail_supplies: {
-                    create: detail_supplies.map((detail: any) => ({
-                        supplier_id: detail.supplier_id,
-                        material_id: detail.material_id,
-                        material_price: detail.material_price,
-                        quantity: detail.quantity
-                    }))
-                }
+                supply_date,
+                supplier_id,
+                user_id,
+                material_id
             }
         });
 
-        res.status(200).json({
+        detail_supplies.forEach(async (item) => await prisma.detailSupply.create({
+            data: {
+                supply_id: newSupply.id,
+                material_id: item.material_id,
+                material_price: item.material_price,
+                quantity: item.quantity,
+            }
+        }))
+
+        return res.status(200).json({
             message: "Supply created successfully",
             data: newSupply
         });
@@ -40,7 +51,7 @@ const createSupply = async (req: Request, res: Response): Promise<void> => {
 };
 
 // Read Supply
-const readSupply = async (req: Request, res: Response): Promise<void> => {
+const readSupply = async (req: Request, res: Response): Promise<any> => {
     try {
         const { supplier_id } = req.query;
 
