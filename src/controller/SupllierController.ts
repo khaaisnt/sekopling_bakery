@@ -6,7 +6,7 @@ const createSupllier = async (req: Request, res: Response): Promise<void> => {
     try {
         const supplier_name: string = req.body.supplier_name;
         const supplier_address: string = req.body.supplier_address;
-        const supplier_phone: number = Number (req.body.supplier_phone);
+        const supplier_phone: string = req.body.supplier_phone;
 
         const newSupplier = await prisma.supplier.create({
             data: {

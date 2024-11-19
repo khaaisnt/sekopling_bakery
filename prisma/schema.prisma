@@ -12,22 +12,22 @@ datasource db {
 
 model Cake {
   id            Int           @id @default(autoincrement())
-  cake_name     String
-  cake_price    Float
-  cake_image    String
-  best_before   DateTime
-  cake_flavour  String
+  cake_name     String        @default("")
+  cake_price    Float         @default(0) @db.Double
+  cake_image    String        @default("")
+  best_before   DateTime      @default(now())
+  cake_flavour  String        @default("")
   compositions  Composition[]
-  detail_orders DetailOrder[]
+  detail_orders detail_order[]
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
 }
 
 model Material {
   id              Int            @id @default(autoincrement())
-  material_name   String
-  material_price  Float
-  material_type   MaterialType
+  material_name   String         @default("")
+  material_price  Float          @default(0) @db.Double
+  material_type   MaterialType         
   compositions    Composition[]
   detail_supplies DetailSupply[]
   createdAt       DateTime       @default(now())
@@ -35,84 +35,85 @@ model Material {
 }
 
 model Composition {
-  id          Int      @id @default(autoincrement())
-  cake_id     Int
-  material_id Int
-  quantity    Float
-  cake        Cake     @relation(fields: [cake_id], references: [id])
-  material    Material @relation(fields: [material_id], references: [id])
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id                 Int      @id @default(autoincrement())
+  cake_id            Int      
+  material_id        Int      
+  quantity           Float    
+  cake               Cake     @relation(fields: [cake_id], references: [id])
+  material           Material @relation(fields: [material_id], references: [id])
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
 }
 
 model Supplier {
-  id                Int       @id @default(autoincrement())
-  supplier_name     String
-  supplier_address  String
-  supplier_phone    Int
-  supplies          Supply[]
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
+  id               Int      @id @default(autoincrement())
+  supplier_name    String   @default("")
+  supplier_address String   @default("")
+  supplier_phone   String   @default("") @db.VarChar(15)
+  supplies         Supply[]
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 }
 
 model Supply {
-  id              Int             @id @default(autoincrement())
-  supply_date     DateTime        @default(now())
-  supplier_id     Int
-  user_id         Int
-  material_id     Int
-  supplier        Supplier        @relation(fields: [supplier_id], references: [id])
-  user            User            @relation(fields: [user_id], references: [id])
+  id              Int            @id @default(autoincrement())
+  supply_date     DateTime       @default(now())
+  supplier_id     Int            @default(0)
+  user_id         Int            @default(0)
+  material_id     Int            @default(0)
+  supplier        Supplier       @relation(fields: [supplier_id], references: [id])
+  user            User           @relation(fields: [user_id], references: [id])
   detail_supplies DetailSupply[]
-  createdAt       DateTime        @default(now())
-  updatedAt       DateTime        @updatedAt
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
 }
 
 model DetailSupply {
-  id              Int       @id @default(autoincrement())
-  supply_id       Int
-  material_id     Int
-  material_price  Float
-  quantity        Float
-  supply          Supply    @relation(fields: [supply_id], references: [id])
-  material        Material  @relation(fields: [material_id], references: [id])
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  id             Int      @id @default(autoincrement())
+  supply_id      Int      @default(0)
+  material_id    Int      @default(0)
+  material_price Float    @default(0) @db.Double
+  quantity       Float    @default(0)
+  supply         Supply   @relation(fields: [supply_id], references: [id])
+  material       Material @relation(fields: [material_id], references: [id])
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 }
 
 model Order {
   id            Int           @id @default(autoincrement())
-  order_date    DateTime
+  order_date    DateTime      @default(now())
   user_id       Int
-  status        OrderStatus
+  status        statusType        
   user          User          @relation(fields: [user_id], references: [id])
-  detail_orders DetailOrder[]
+  detail_order  detail_order[] 
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
 }
 
-model DetailOrder {
-  id         Int    @id @default(autoincrement())
+model detail_order {
+  id         Int      @id @default(autoincrement())
   order_id   Int
   cake_id    Int
-  cake_price Float
-  quantity   Float
-  order      Order  @relation(fields: [order_id], references: [id])
-  cake       Cake   @relation(fields: [cake_id], references: [id])
+  cake_price Float    @default(0) @db.Double
+  quantity   Float    @default(0)
+  order      Order    @relation(fields: [order_id], references: [id])
+  cake       Cake     @relation(fields: [cake_id], references: [id])
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 }
 
+
 model User {
-  id            Int       @id @default(autoincrement())
-  user_name     String
-  user_email    String    @unique
-  user_password String
+  id            Int      @id @default(autoincrement())
+  user_name     String   @default("")
+  user_email    String   @unique
+  user_password String   @default("")
   user_role     UserRole
   supplies      Supply[]
   orders        Order[]
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 }
 
 enum MaterialType {
@@ -123,10 +124,11 @@ enum MaterialType {
 
 enum UserRole {
   ADMIN
-  USER
+  CASHIER
 }
 
-enum OrderStatus {
-  PROCESS
-  DELIVERED
+enum statusType {
+  PENDING
+  DONE
+  CANCEL
 }

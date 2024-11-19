@@ -1,22 +1,16 @@
 import { Request, Response } from "express";
-import { OrderStatus, PrismaClient } from "@prisma/client";
+import { statusType, PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
 // membuat data order
 const createOrder = async (req: Request, res: Response): Promise<any> => {
     try {
-        const {
-            order_date,
-            user_id,
-            status,
-            user,
-            detail_orders
-        } = req.body;
-
-        if (!Object.values(OrderStatus).includes(status)) {
-            return res.status(400).json({ message: "Invalid order status" });
-        }
+        const order_date: Date = new Date(req.body.order_date);
+        const user_id: number = req.body.user_id;
+        const status: statusType = req.body.status ;
+        const user = req.body.user;
+        const detail_orders = req.body.detail_order;
 
         const newOrder = await prisma.order.create({
             data: {
@@ -24,7 +18,7 @@ const createOrder = async (req: Request, res: Response): Promise<any> => {
                 user_id,
                 status,
                 user,
-                detail_orders: {
+                detail_order: {
                     create: detail_orders.map((detail: any) => ({
                         cake_id: detail.cake_id,
                         cake_price: detail.cake_price,
